@@ -1,226 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <base target="_top">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0a0720">
-  <title>FOCUS Check-in Dashboard</title>
-  <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; }
-    body {
-      min-height: 100dvh;
-      font-family: system-ui, -apple-system, sans-serif;
-      color: #fff;
-      background: radial-gradient(circle at 50% -10%, #4a1fb8, #0a0720 60%), #0a0720;
-      display: flex;
-      justify-content: center;
-    }
-    .app {
-      width: 100%;
-      max-width: 480px;
-      padding: 0 16px calc(90px + env(safe-area-inset-bottom));
-      padding-top: env(safe-area-inset-top);
-    }
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0720">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>FOCUS Check-in</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#05030f;font-family:system-ui,-apple-system,sans-serif;color:#fff}
+  body{display:flex;justify-content:center;align-items:center}
 
-    /* top bar */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 5;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 14px 2px;
-      background: linear-gradient(#0a0720ee, #0a072000);
-    }
-    h1 {
-      margin: 0;
-      font-size: 20px;
-      letter-spacing: 2px;
-      background: linear-gradient(90deg, #8ef, #c6f);
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-    .live {
-      font-size: 12px;
-      font-weight: 700;
-      color: #3f9;
-      background: #33ff9922;
-      padding: 5px 10px;
-      border-radius: 20px;
-    }
-    .live::before {
-      content: '● ';
-      animation: b 1s infinite;
-    }
-    @keyframes b { 50% { opacity: .2; } }
+  /* phone shell: full screen on phones, phone frame on big screens */
+  .phone{position:relative;width:100%;height:100dvh;overflow:hidden;
+    background:radial-gradient(circle at 50% -10%,#4a1fb8,#0a0720 60%),#0a0720}
+  @media(min-width:520px){
+    .phone{width:390px;height:min(844px,96vh);border-radius:44px;border:8px solid #1c1740;
+      box-shadow:0 0 80px #7c5cff55}
+  }
 
-    .card {
-      background: #ffffff12;
-      border: 1px solid #ffffff22;
-      border-radius: 24px;
-      padding: 16px;
-      margin-bottom: 16px;
-      backdrop-filter: blur(10px);
-    }
-    .label { opacity: .6; letter-spacing: 2px; font-size: 11px; font-weight: 600; }
+  header{position:absolute;top:0;left:0;right:0;z-index:5;padding:calc(14px + env(safe-area-inset-top)) 20px 10px;
+    display:flex;justify-content:space-between;align-items:center}
+  h1{margin:0;font-size:20px;letter-spacing:3px;background:linear-gradient(90deg,#8ef,#c6f);
+    -webkit-background-clip:text;color:transparent}
+  .live{font-size:11px;font-weight:700;color:#3f9;background:#33ff9922;padding:5px 10px;border-radius:20px}
+  .live::before{content:'● ';animation:b 1s infinite}
+  @keyframes b{50%{opacity:.2}}
 
-    /* scanner */
-    #reader {
-      margin-top: 10px;
-      width: 100%;
-      aspect-ratio: 1/1;
-      border-radius: 20px;
-      overflow: hidden;
-      background: #000;
-      border: 2px solid #7c5cff;
-      box-shadow: 0 0 30px #7c5cff66;
-    }
-    #reader video { object-fit: cover; }
-    #status { margin-top: 12px; text-align: center; opacity: .8; font-size: 14px; }
+  .view{position:absolute;inset:0;padding:calc(70px + env(safe-area-inset-top)) 18px calc(84px + env(safe-area-inset-bottom));
+    display:none;flex-direction:column;overflow-y:auto}
+  .view.on{display:flex}
 
-    /* latest */
-    #latest {
-      font-size: clamp(34px, 11vw, 54px);
-      font-weight: 900;
-      line-height: 1.1;
-      margin: 10px 0 4px;
-      word-break: break-word;
-      background: linear-gradient(90deg, #fff, #9ff);
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-    .pop { animation: pop .7s cubic-bezier(.2, 1.6, .4, 1); }
-    @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  /* scan view */
+  .camwrap{position:relative;flex:1;min-height:0;border-radius:28px;overflow:hidden;background:#000;
+    box-shadow:0 0 40px #7c5cff55}
+  #reader{position:absolute;inset:0;border:0!important}
+  #reader video{width:100%!important;height:100%!important;object-fit:cover}
+  .frame{position:absolute;left:50%;top:50%;width:62%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
+  .frame i{position:absolute;width:34px;height:34px;border:4px solid #b9a8ff}
+  .frame i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0;border-radius:14px 0 0 0}
+  .frame i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0;border-radius:0 14px 0 0}
+  .frame i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 14px}
+  .frame i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 14px 0}
+  .frame b{position:absolute;left:6%;right:6%;height:3px;background:linear-gradient(90deg,transparent,#8ef,transparent);
+    animation:scan 2s ease-in-out infinite}
+  @keyframes scan{0%,100%{top:6%}50%{top:92%}}
+  #status{text-align:center;opacity:.75;font-size:14px;margin-top:14px}
 
-    /* stats */
-    .row { display: flex; align-items: center; gap: 18px; margin-top: 14px; }
-    .ring {
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      flex: none;
-      background: conic-gradient(#7c5cff var(--p, 0%), #ffffff18 0);
-      transition: .6s;
-    }
-    .ring div {
-      width: 88px;
-      height: 88px;
-      border-radius: 50%;
-      background: #150e3a;
-      display: grid;
-      place-items: center;
-      font-size: 22px;
-      font-weight: 800;
-    }
-    .stats { font-size: 15px; opacity: .9; line-height: 1.4; }
-    .stats b { font-size: 30px; }
-    ul { list-style: none; padding: 0; margin: 14px 0 0; }
-    li {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 14px;
-      margin-bottom: 8px;
-      border-radius: 14px;
-      background: #ffffff10;
-      font-size: 15px;
-    }
-    li span:first-child { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    li span:last-child { opacity: .55; flex: none; }
+  /* live view */
+  .card{background:#ffffff12;border:1px solid #ffffff22;border-radius:26px;padding:20px;margin-bottom:14px}
+  .label{opacity:.6;letter-spacing:2px;font-size:11px;font-weight:600}
+  #latest{font-size:clamp(34px,11vw,48px);font-weight:900;line-height:1.1;margin:10px 0 4px;word-break:break-word;
+    background:linear-gradient(90deg,#fff,#9ff);-webkit-background-clip:text;color:transparent}
+  .pop{animation:pop .7s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+  .row{display:flex;align-items:center;gap:18px;margin-top:14px}
+  .ring{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;flex:none;
+    background:conic-gradient(#7c5cff var(--p,0%),#ffffff18 0);transition:.6s}
+  .ring div{width:90px;height:90px;border-radius:50%;background:#150e3a;display:grid;place-items:center;font-size:22px;font-weight:800}
+  .stats{font-size:15px;line-height:1.4}.stats b{font-size:32px}
+  ul{list-style:none;padding:0;margin:12px 0 0}
+  li{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;margin-bottom:8px;border-radius:14px;background:#ffffff10}
+  li span:first-child{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  li span:last-child{opacity:.55;flex:none}
 
-    /* full-screen result */
-    #overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 20;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 30px;
-    }
-    #overlay.on { display: flex; animation: fade .2s; }
-    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-    #overlay .icon { font-size: 90px; }
-    #overlay .name {
-      font-size: clamp(34px, 11vw, 52px);
-      font-weight: 900;
-      margin: 10px 0;
-      word-break: break-word;
-    }
-    #overlay .sub { font-size: 18px; opacity: .95; }
-    #overlay .tap {
-      position: absolute;
-      bottom: calc(40px + env(safe-area-inset-bottom));
-      opacity: .7;
-      font-size: 13px;
-    }
-    .ok { background: #0f9d58; }
-    .already { background: #e08a00; }
-    .bad { background: #d6334a; }
-    .wait { background: #3b1d8f; }
+  /* full-screen result */
+  #overlay{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;padding:30px}
+  #overlay.on{display:flex;animation:fade .2s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  #overlay .icon{font-size:96px}
+  #overlay .name{font-size:clamp(34px,11vw,48px);font-weight:900;margin:10px 0;word-break:break-word}
+  #overlay .sub{font-size:18px}
+  #overlay .tap{position:absolute;bottom:40px;opacity:.7;font-size:13px}
+  .ok{background:#0f9d58}.already{background:#e08a00}.bad{background:#d6334a}.wait{background:#3b1d8f}
 
-    /* bottom nav */
-    nav {
-      position: fixed;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 0;
-      z-index: 10;
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
-      background: #150e3aee;
-      backdrop-filter: blur(14px);
-      border-top: 1px solid #ffffff22;
-    }
-    nav button {
-      flex: 1;
-      background: none;
-      border: 0;
-      color: #fff;
-      opacity: .55;
-      font-size: 12px;
-      padding: 6px;
-      cursor: pointer;
-    }
-    nav button span { display: block; font-size: 22px; }
-    nav button.active { opacity: 1; color: #b9a8ff; }
-  </style>
-</head>
+  /* tab bar */
+  nav{position:absolute;left:0;right:0;bottom:0;z-index:10;display:flex;
+    padding:8px 30px calc(8px + env(safe-area-inset-bottom));background:#150e3af0;backdrop-filter:blur(14px);
+    border-top:1px solid #ffffff22}
+  nav button{flex:1;background:none;border:0;color:#fff;opacity:.5;font-size:12px;padding:6px;font-weight:600}
+  nav button span{display:block;font-size:24px}
+  nav button.active{opacity:1;color:#b9a8ff}
+</style></head>
 <body>
-  <div class="app">
-    <header><h1>🎟 FOCUS</h1><div class="live">LIVE</div></header>
+<div class="phone">
+  <header><h1>🎟 FOCUS</h1><div class="live">LIVE</div></header>
 
-    <section id="scanSec" class="card">
-      <div class="label">SCAN TICKET</div>
+  <!-- SCAN -->
+  <section class="view on" id="vScan">
+    <div class="camwrap">
       <div id="reader"></div>
-      <div id="status">Point the camera at the QR code</div>
-    </section>
+      <div class="frame"><i></i><i></i><i></i><i></i><b></b></div>
+    </div>
+    <div id="status">Point the camera at the QR code</div>
+  </section>
 
-    <section id="liveSec">
-      <div class="card">
-        <div class="label">LATEST ARRIVAL</div>
-        <div id="latest">Waiting…</div>
-        <div id="when" class="label"></div>
-        <div class="row">
-          <div class="ring" id="ring"><div id="pct">0%</div></div>
-          <div class="stats"><b id="c">0</b> / <span id="t">0</span><br>checked in</div>
-        </div>
+  <!-- LIVE -->
+  <section class="view" id="vLive">
+    <div class="card">
+      <div class="label">LATEST ARRIVAL</div>
+      <div id="latest">Waiting…</div>
+      <div id="when" class="label"></div>
+      <div class="row">
+        <div class="ring" id="ring"><div id="pct">0%</div></div>
+        <div class="stats"><b id="c">0</b> / <span id="t">0</span><br>checked in</div>
       </div>
-      <div class="card">
-        <div class="label">RECENT CHECK-INS</div>
-        <ul id="list"></ul>
-      </div>
-    </section>
-  </div>
+    </div>
+    <div class="card">
+      <div class="label">RECENT CHECK-INS</div>
+      <ul id="list"></ul>
+    </div>
+  </section>
 
   <div id="overlay"></div>
 
@@ -228,98 +118,86 @@
     <button class="active" id="b1"><span>📷</span>Scan</button>
     <button id="b2"><span>📊</span>Live</button>
   </nav>
+</div>
 
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script>
-    /* ==========================================
-       IMPORTANT: Paste your New Web App URL below
-       ========================================== */
-    const API = 'https://script.google.com/macros/s/AKfycbyVW0SlpZ5efS_z4Lj9Eifn5Ow4q_tLWbRiyxeiDMk1EaDIrpBHAtSs3cmWpCnaoORi/exec';
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  const API = 'PASTE_YOUR_EXEC_URL_HERE';   // https://script.google.com/macros/s/.../exec
 
-    const inGAS = !!(window.google && google.script && google.script.run);
-    const api = (action, text) => inGAS
-      ? new Promise((res, rej) => {
-          const r = google.script.run.withSuccessHandler(res).withFailureHandler(rej);
-          action === 'scan' ? r.processScan(text) : r.getStats();
-        })
-      : fetch(API + '?action=' + action + (text ? '&text=' + encodeURIComponent(text) : '')).then(r => r.json());
+  const $ = id => document.getElementById(id);
+  const api = (action, text) =>
+    fetch(API + '?action=' + action + (text ? '&text=' + encodeURIComponent(text) : '')).then(r => r.json());
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const fmtT = t => t ? new Date(t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+  const fmtD = t => t ? new Date(t).toLocaleString() : '';
 
-    const $ = id => document.getElementById(id);
-    const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    const fmtT = t => t ? new Date(t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-    const fmtD = t => t ? new Date(t).toLocaleString() : '';
+  /* tabs */
+  function tab(n) {
+    $('vScan').classList.toggle('on', n === 1);
+    $('vLive').classList.toggle('on', n === 2);
+    $('b1').classList.toggle('active', n === 1);
+    $('b2').classList.toggle('active', n === 2);
+  }
+  $('b1').onclick = () => tab(1);
+  $('b2').onclick = () => tab(2);
 
-    /* ---------- nav ---------- */
-    $('b1').onclick = () => { scrollTo({top:0, behavior:'smooth'}); setTab(1); };
-    $('b2').onclick = () => { $('liveSec').scrollIntoView({behavior:'smooth'}); setTab(2); };
-    const setTab = n => { $('b1').classList.toggle('active', n === 1); $('b2').classList.toggle('active', n === 2); };
-
-    /* ---------- live stats ---------- */
-    let lastKey = '';
-    function render(s) {
-      const pct = s.total ? Math.round(s.checked / s.total * 100) : 0;
-      $('ring').style.setProperty('--p', pct + '%');
-      $('pct').textContent = pct + '%';
-      $('c').textContent = s.checked;
-      $('t').textContent = s.total;
-      const top = s.recent[0];
-      if (top) {
-        const key = top.name + top.time;
-        if (key !== lastKey) {
-          const el = $('latest');
-          el.textContent = top.name;
-          el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-          lastKey = key;
-        }
-        $('when').textContent = fmtT(top.time);
+  /* live stats */
+  let lastKey = '';
+  function render(s) {
+    if (!s || s.total === undefined) return;
+    const pct = s.total ? Math.round(s.checked / s.total * 100) : 0;
+    $('ring').style.setProperty('--p', pct + '%');
+    $('pct').textContent = pct + '%';
+    $('c').textContent = s.checked;
+    $('t').textContent = s.total;
+    const top = s.recent[0];
+    if (top) {
+      const key = top.name + top.time;
+      if (key !== lastKey) {
+        const el = $('latest');
+        el.textContent = top.name;
+        el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+        lastKey = key;
       }
-      $('list').innerHTML = s.recent.slice(1)
-        .map(r => `<li><span>${esc(r.name)}</span><span>${fmtT(r.time)}</span></li>`).join('');
+      $('when').textContent = fmtT(top.time);
     }
-    
-    // Poll the backend every 3 seconds to update stats
-    const refresh = () => api('stats').then(render).catch(() => {});
-    (function poll() { api('stats').then(render).catch(() => {}).finally(() => setTimeout(poll, 3000)); })();
+    $('list').innerHTML = s.recent.slice(1)
+      .map(r => `<li><span>${esc(r.name)}</span><span>${fmtT(r.time)}</span></li>`).join('');
+  }
+  const refresh = () => api('stats').then(render).catch(() => {});
+  (function poll() { api('stats').then(render).catch(() => {}).finally(() => setTimeout(poll, 3000)); })();
 
-    /* ---------- scanner ---------- */
-    let busy = false, timer;
-    const ov = $('overlay');
-    function showOverlay(cls, icon, title, sub, auto) {
-      clearTimeout(timer);
-      ov.className = 'on ' + cls;
-      ov.innerHTML = `<div class="icon">${icon}</div><div class="name">${title}</div>
-        <div class="sub">${sub || ''}</div>${auto ? '<div class="tap">Tap to scan next</div>' : ''}`;
-      if (auto) timer = setTimeout(closeOverlay, 2800);
-    }
-    function closeOverlay() { ov.className = ''; busy = false; }
-    ov.onclick = () => { if (!ov.classList.contains('wait')) closeOverlay(); };
+  /* scanner */
+  let busy = false, timer;
+  const ov = $('overlay');
+  function showOverlay(cls, icon, title, sub, auto) {
+    clearTimeout(timer);
+    ov.className = 'on ' + cls;
+    ov.innerHTML = `<div class="icon">${icon}</div><div class="name">${title}</div>
+      <div class="sub">${sub || ''}</div>${auto ? '<div class="tap">Tap to scan next</div>' : ''}`;
+    if (auto) timer = setTimeout(closeOverlay, 2800);
+  }
+  function closeOverlay() { ov.className = ''; busy = false; }
+  ov.onclick = () => { if (!ov.classList.contains('wait')) closeOverlay(); };
 
-    function onScan(text) {
-      if (busy) return;
-      busy = true;
-      showOverlay('wait', '⏳', 'Checking…');
-      
-      api('scan', text).then(r => {
-        if (r.status === 'ok') { 
-          showOverlay('ok', '✅', esc(r.name), 'Checked in successfully', true); 
-          refresh(); 
-        }
-        else if (r.status === 'already') {
-          showOverlay('already', '⚠️', esc(r.name), 'ALREADY CHECKED IN<br>' + fmtD(r.time), true);
-        }
-        else {
-          showOverlay('bad', '❌', 'Invalid QR', 'Not found in the guest list', true);
-        }
-        if (navigator.vibrate) navigator.vibrate(r.status === 'ok' ? 120 : [200, 100, 200]);
-      }).catch(e => showOverlay('bad', '⚠️', 'Error', esc(e.message || e), true));
-    }
+  function onScan(text) {
+    if (busy) return;
+    busy = true;
+    showOverlay('wait', '⏳', 'Checking…');
+    api('scan', text).then(r => {
+      if (r.status === 'ok') { showOverlay('ok', '✅', esc(r.name), 'Checked in successfully', true); refresh(); }
+      else if (r.status === 'already') showOverlay('already', '⚠️', esc(r.name), 'ALREADY CHECKED IN<br>' + fmtD(r.time), true);
+      else if (r.status === 'invalid') showOverlay('bad', '❌', 'Invalid QR', 'Not found in the guest list', true);
+      else showOverlay('bad', '⚠️', 'Error', esc(r.message || 'Try again'), true);
+      if (navigator.vibrate) navigator.vibrate(r.status === 'ok' ? 120 : [200, 100, 200]);
+    }).catch(e => showOverlay('bad', '⚠️', 'Network error', esc(e.message || e), true));
+  }
 
-    new Html5Qrcode('reader').start(
-      { facingMode: 'environment' },
-      { fps: 10, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.7); return { width: s, height: s }; } },
-      onScan,
-      () => {}
-    ).catch(() => { $('status').textContent = '🚫 Camera blocked. Open the link directly in Chrome/Safari and allow camera.'; });
-  </script>
-</body>
-</html>
+  new Html5Qrcode('reader').start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.62); return { width: s, height: s }; } },
+    onScan,
+    () => {}
+  ).catch(() => { $('status').textContent = '🚫 Camera blocked. Allow camera access in your browser settings.'; });
+</script>
+</body></html>
