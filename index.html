@@ -28,34 +28,24 @@
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px}
   .label{font-size:11px;font-weight:600;letter-spacing:1px;color:var(--mute);text-transform:uppercase}
 
-  /* live summary */
-  .sum{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:6px}
-  #latest{font-size:22px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #when{font-size:12px;color:var(--mute);margin-top:2px}
-  .count{text-align:right;flex:none}
-  .count b{font-size:26px;font-weight:700}
-  .count span{font-size:14px;color:var(--mute)}
+  /* count */
+  .count{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+  .count b{font-size:40px;font-weight:700;line-height:1}
+  .count span{font-size:16px;color:var(--mute)}
   .bar{height:6px;background:var(--line);border-radius:3px;margin-top:12px;overflow:hidden}
   .bar div{height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .5s}
-  .flash{animation:fl .6s}
-  @keyframes fl{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 
-  /* scanner */
-  .camwrap{position:relative;width:100%;aspect-ratio:4/3;background:#000;border-radius:14px;overflow:hidden;
-    border:1px solid var(--line);margin-bottom:12px}
-  #reader{position:absolute;inset:0;border:0!important}
-  #reader video{width:100%!important;height:100%!important;object-fit:cover}
-  .frame{position:absolute;left:50%;top:50%;width:58%;aspect-ratio:1;transform:translate(-50%,-50%);pointer-events:none}
-  .frame i{position:absolute;width:26px;height:26px;border:3px solid #fff;opacity:.9}
-  .frame i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0}
-  .frame i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0}
-  .frame i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0}
-  .frame i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0}
+  /* camera: full view, nothing cropped */
+  .camwrap{position:relative;width:100%;aspect-ratio:3/4;max-height:52vh;background:#000;border-radius:14px;
+    overflow:hidden;border:1px solid var(--line);margin-bottom:12px;margin-left:auto;margin-right:auto}
+  #reader{position:absolute;inset:0;width:100%;height:100%;border:0!important;padding:0!important}
+  #reader video{position:absolute!important;inset:0;width:100%!important;height:100%!important;object-fit:contain!important}
+  #reader canvas{display:none!important}
   #camMsg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;
     padding:20px;font-size:14px;color:var(--mute)}
 
   /* result (under scanner) */
-  #result{display:flex;align-items:center;gap:14px;border-left:5px solid var(--line)}
+  #result{display:flex;align-items:center;gap:14px;border-left:5px solid var(--line);margin-bottom:0}
   #result .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;
     background:var(--line);font-size:22px;font-weight:700}
   #result .nm{font-size:20px;font-weight:700;line-height:1.2;word-break:break-word}
@@ -64,37 +54,22 @@
   #result.already{border-left-color:var(--warn)} #result.already .ic{background:var(--warn);color:#451a03}
   #result.bad{border-left-color:var(--bad)} #result.bad .ic{background:var(--bad);color:#fff}
   #result.wait .ic{background:var(--accent);color:#fff}
-
-  /* recent list */
-  ul{list-style:none;padding:0;margin:10px 0 0}
-  li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
-  li:first-child{border-top:0}
-  li span:first-child{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  li span:last-child{color:var(--mute);flex:none}
-  .empty{color:var(--mute);font-size:13px;padding:8px 0}
 </style></head>
 <body>
 <div class="phone">
   <header><h1>EVENT CHECK-IN</h1><div class="live"><i></i>Live</div></header>
 
   <main>
-    <!-- LIVE (above scanner) -->
+    <!-- COUNT -->
     <div class="card">
-      <div class="label">Latest arrival</div>
-      <div class="sum">
-        <div style="min-width:0">
-          <div id="latest">Waiting…</div>
-          <div id="when"></div>
-        </div>
-        <div class="count"><b id="c">0</b> <span>/ <span id="t">0</span></span></div>
-      </div>
+      <div class="label">Checked in</div>
+      <div class="count"><b id="c">0</b><span>/ <span id="t">0</span></span></div>
       <div class="bar"><div id="bar"></div></div>
     </div>
 
     <!-- SCANNER -->
     <div class="camwrap">
       <div id="reader"></div>
-      <div class="frame"><i></i><i></i><i></i><i></i></div>
       <div id="camMsg"></div>
     </div>
 
@@ -102,12 +77,6 @@
     <div class="card" id="result">
       <div class="ic">▣</div>
       <div><div class="nm">Ready to scan</div><div class="sb">Point the camera at a ticket QR code</div></div>
-    </div>
-
-    <!-- RECENT -->
-    <div class="card">
-      <div class="label">Recent check-ins</div>
-      <ul id="list"><li class="empty">No check-ins yet</li></ul>
     </div>
   </main>
 </div>
@@ -120,33 +89,17 @@
   const api = (action, text) =>
     fetch(API + '?action=' + action + (text ? '&text=' + encodeURIComponent(text) : '')).then(r => r.json());
   const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-  const fmtT = t => t ? new Date(t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
   const fmtD = t => t ? new Date(t).toLocaleString([], {dateStyle:'medium', timeStyle:'short'}) : '';
 
-  /* ---------- live ---------- */
-  let lastKey = '';
+  /* ---------- count ---------- */
   function render(s) {
     if (!s || s.total === undefined) return;
     $('c').textContent = s.checked;
     $('t').textContent = s.total;
     $('bar').style.width = (s.total ? s.checked / s.total * 100 : 0) + '%';
-    const top = s.recent[0];
-    if (top) {
-      const key = top.name + top.time;
-      if (key !== lastKey) {
-        const el = $('latest');
-        el.textContent = top.name;
-        el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
-        lastKey = key;
-      }
-      $('when').textContent = 'Checked in at ' + fmtT(top.time);
-    }
-    $('list').innerHTML = s.recent.length
-      ? s.recent.map(r => `<li><span>${esc(r.name)}</span><span>${fmtT(r.time)}</span></li>`).join('')
-      : '<li class="empty">No check-ins yet</li>';
   }
   const refresh = () => api('stats').then(render).catch(() => {});
-  (function poll() { api('stats').then(render).catch(() => {}).finally(() => setTimeout(poll, 3000)); })();
+  (function poll() { api('stats').then(render).catch(() => {}).finally(() => setTimeout(poll, 4000)); })();
 
   /* ---------- scanner ---------- */
   const res = $('result');
@@ -159,22 +112,23 @@
   function onScan(text) {
     const now = Date.now();
     if (busy) return;
-    if (text === lastText && now - lastAt < 6000) return;   // ignore the same code held in view
+    if (text === lastText && now - lastAt < 3000) return;   // same code held in view
     busy = true; lastText = text; lastAt = now;
     show('wait', '…', 'Checking', 'Please wait');
     api('scan', text).then(r => {
       if (r.status === 'ok') { show('ok', '✓', esc(r.name), 'Checked in successfully'); refresh(); }
       else if (r.status === 'already') show('already', '!', esc(r.name), 'Already checked in · ' + fmtD(r.time));
-      else if (r.status === 'invalid') show('bad', '✕', 'Invalid QR code', 'Not found in the guest list');
+      else if (r.status === 'invalid') show('bad', '✕', 'User not found', 'Invalid QR code');
       else show('bad', '✕', 'Error', esc(r.message || 'Try again'));
       if (navigator.vibrate) navigator.vibrate(r.status === 'ok' ? 100 : [150, 80, 150]);
     }).catch(() => show('bad', '✕', 'Network error', 'Check your connection and try again'))
       .finally(() => setTimeout(() => { busy = false; }, 1500));
   }
 
+  // No qrbox: the whole camera frame is scanned and shown
   new Html5Qrcode('reader').start(
     { facingMode: 'environment' },
-    { fps: 10, qrbox: (w, h) => { const s = Math.floor(Math.min(w, h) * 0.58); return { width: s, height: s }; } },
+    { fps: 10 },
     onScan,
     () => {}
   ).catch(() => {
